@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Contoso Document Portal</title>
-<script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-authentication-library-for-js/2.38.3/msal-browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
   :root {
@@ -12,7 +12,6 @@
     --teal:#1D9E75;--teal-light:#23bf8d;--teal-dim:rgba(29,158,117,0.12);
     --gold:#C9A84C;--off-white:#F7F8FA;--text-primary:#0F1F3D;
     --text-secondary:#4A5568;--text-muted:#8896A8;--border:rgba(15,31,61,0.10);
-    --shadow-sm:0 1px 3px rgba(15,31,61,0.08);--shadow-md:0 4px 16px rgba(15,31,61,0.10);
     --shadow-lg:0 12px 40px rgba(15,31,61,0.14);--radius:10px;--radius-lg:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -24,7 +23,7 @@
   .login-brand{display:flex;align-items:center;gap:12px;}
   .brand-icon{width:40px;height:40px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;}
   .brand-icon svg{width:22px;height:22px;fill:white;}
-  .brand-name{font-family:'DM Serif Display',serif;font-size:1.25rem;color:white;letter-spacing:0.01em;}
+  .brand-name{font-family:'DM Serif Display',serif;font-size:1.25rem;color:white;}
   .login-hero{position:relative;z-index:1;}
   .login-hero h1{font-family:'DM Serif Display',serif;font-size:2.6rem;color:white;line-height:1.15;margin-bottom:20px;}
   .login-hero h1 em{font-style:italic;color:var(--teal-light);}
@@ -32,25 +31,27 @@
   .login-badges{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;}
   .login-badge{display:flex;align-items:center;gap:10px;font-size:0.78rem;color:rgba(255,255,255,0.45);letter-spacing:0.04em;text-transform:uppercase;}
   .login-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;}
-  .login-right{width:480px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px 56px;background:white;}
-  .login-card{width:100%;max-width:340px;}
+  .login-right{width:520px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px 56px;background:white;}
+  .login-card{width:100%;max-width:360px;}
   .login-card h2{font-family:'DM Serif Display',serif;font-size:1.75rem;color:var(--navy);margin-bottom:6px;}
-  .login-card .subtitle{font-size:0.88rem;color:var(--text-muted);margin-bottom:40px;}
-  .config-section{background:var(--off-white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:28px;}
+  .login-card .subtitle{font-size:0.88rem;color:var(--text-muted);margin-bottom:32px;}
+  .config-section{background:var(--off-white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
   .config-section h3{font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
   .config-field{margin-bottom:12px;}
   .config-field:last-child{margin-bottom:0;}
   .config-field label{display:block;font-size:0.75rem;font-weight:500;color:var(--text-secondary);margin-bottom:4px;}
-  .config-field input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--text-primary);background:white;transition:border-color 0.2s;outline:none;}
+  .config-field input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--text-primary);background:white;outline:none;transition:border-color 0.2s;}
   .config-field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,0.10);}
   .config-field input::placeholder{color:var(--text-muted);font-style:italic;}
-  .btn-sso{width:100%;padding:14px 24px;background:var(--navy);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.2s,transform 0.15s;letter-spacing:0.01em;}
+  .btn-sso{width:100%;padding:14px 24px;background:var(--navy);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.2s,transform 0.15s;}
   .btn-sso:hover{background:var(--navy-light);transform:translateY(-1px);}
   .ms-logo{width:18px;height:18px;}
-  .login-footer{margin-top:32px;text-align:center;font-size:0.75rem;color:var(--text-muted);line-height:1.6;}
+  .login-footer{margin-top:28px;text-align:center;font-size:0.75rem;color:var(--text-muted);line-height:1.6;}
   .security-badges{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);}
   .sec-badge{display:flex;align-items:center;gap:5px;font-size:0.7rem;color:var(--text-muted);font-weight:500;}
   .sec-badge svg{width:12px;height:12px;}
+  #error-bar{display:none;background:#FCE8E6;border:1px solid #F5C6C2;border-radius:var(--radius);padding:12px 20px;margin-bottom:20px;font-size:0.82rem;color:#C5221F;}
+  /* APP */
   #app-screen{display:none;min-height:100vh;flex-direction:column;}
   header{background:var(--navy);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.18);}
   .header-brand{display:flex;align-items:center;gap:10px;}
@@ -84,7 +85,7 @@
   .mdca-item-icon{width:24px;height:24px;background:rgba(29,158,117,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;}
   .mdca-item-icon svg{width:13px;height:13px;fill:var(--teal-light);}
   .doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
-  .doc-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:box-shadow 0.2s,transform 0.2s;cursor:default;}
+  .doc-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:box-shadow 0.2s,transform 0.2s;}
   .doc-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
   .doc-card-top{padding:24px 24px 18px;display:flex;align-items:flex-start;gap:14px;}
   .doc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -107,6 +108,8 @@
   .btn-download{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--teal-dim);color:var(--teal);border:1px solid rgba(29,158,117,0.25);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.76rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
   .btn-download:hover{background:var(--teal);color:white;border-color:var(--teal);}
   .btn-download svg{width:13px;height:13px;}
+  .btn-download.downloading{opacity:0.6;cursor:not-allowed;}
+  /* TOAST */
   #toast-container{position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
   .toast{background:var(--navy);color:white;border-radius:var(--radius);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;min-width:300px;max-width:400px;box-shadow:var(--shadow-lg);animation:slideIn 0.3s ease-out;pointer-events:all;}
   .toast.success{border-left:3px solid var(--teal);}
@@ -118,6 +121,7 @@
   .toast-title{font-size:0.82rem;font-weight:600;margin-bottom:2px;}
   .toast-msg{font-size:0.75rem;color:rgba(255,255,255,0.60);line-height:1.4;}
   @keyframes slideIn{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+  /* MDCA OVERLAY */
   .mdca-overlay{position:fixed;inset:0;background:rgba(15,31,61,0.55);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;}
   .mdca-modal{background:white;border-radius:var(--radius-lg);padding:36px 40px;max-width:440px;width:90%;text-align:center;box-shadow:var(--shadow-lg);animation:scaleIn 0.25s ease;}
   @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
@@ -133,16 +137,19 @@
   .step-num{width:18px;height:18px;background:var(--teal);border-radius:50%;color:white;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
   .mdca-modal-btn{width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:0.86rem;font-weight:500;cursor:pointer;transition:background 0.2s;}
   .mdca-modal-btn:hover{background:var(--navy-light);}
+  /* LOADING */
   #loading-screen{display:none;position:fixed;inset:0;background:var(--navy);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
   .loader-ring{width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--teal);border-radius:50%;animation:spin 0.8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .loader-text{font-size:0.85rem;color:rgba(255,255,255,0.5);}
-  #error-bar{display:none;background:#FCE8E6;border:1px solid #F5C6C2;border-radius:var(--radius);padding:12px 20px;margin-bottom:20px;font-size:0.82rem;color:#C5221F;}
 </style>
 </head>
 <body>
+
 <div id="loading-screen"><div class="loader-ring"></div><div class="loader-text">Authenticating with Microsoft Entra ID...</div></div>
 <div id="toast-container"></div>
+
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-left">
     <div class="login-brand">
@@ -182,6 +189,8 @@
     </div>
   </div>
 </div>
+
+<!-- APP -->
 <div id="app-screen">
   <header>
     <div class="header-brand">
@@ -217,48 +226,55 @@
     <div class="doc-grid" id="doc-grid"></div>
   </main>
 </div>
+
+<!-- MDCA OVERLAY -->
 <div id="mdca-overlay" class="mdca-overlay" style="display:none;" onclick="closeOverlay()">
   <div class="mdca-modal" onclick="event.stopPropagation()">
     <div class="mdca-modal-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
     <h2>MDCA: Label Applied</h2>
     <p>Microsoft Defender for Cloud Apps intercepted your download request. The file has been protected with a Microsoft Purview sensitivity label before delivery.</p>
-    <div class="mdca-label-chip" id="overlay-label-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/></svg><span id="overlay-label-text">Confidential</span></div>
+    <div class="mdca-label-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/></svg><span id="overlay-label-text">Confidential</span></div>
     <div class="mdca-steps">
       <div class="mdca-step"><div class="step-num">1</div><div>Session policy matched: <strong>Contoso Docs - Label on Download</strong></div></div>
       <div class="mdca-step"><div class="step-num">2</div><div>File type inspected and label eligibility confirmed</div></div>
       <div class="mdca-step"><div class="step-num">3</div><div>Sensitivity label applied via Microsoft Purview Information Protection</div></div>
       <div class="mdca-step"><div class="step-num">4</div><div>Download delivered. Activity logged to MDCA audit trail.</div></div>
     </div>
-    <button class="mdca-modal-btn" onclick="closeOverlay()">Continue</button>
+    <button class="mdca-modal-btn" id="overlay-continue-btn" onclick="completeDownload()">Continue &amp; Download File</button>
   </div>
 </div>
+
 <script>
-let msalInstance=null;
-const DOCS=[
-  {name:"Q2 Financial Summary",dept:"Finance",type:"word",size:"1.2 MB",sensitivity:"confidential",label:"Confidential - Finance"},
-  {name:"Employee Handbook 2025",dept:"Human Resources",type:"word",size:"3.4 MB",sensitivity:"internal",label:"Internal Use Only"},
-  {name:"Revenue Forecast Model",dept:"Finance",type:"excel",size:"2.1 MB",sensitivity:"confidential",label:"Confidential - Finance"},
-  {name:"Vendor Contract Template",dept:"Legal",type:"word",size:"890 KB",sensitivity:"restricted",label:"Highly Confidential"},
-  {name:"Q1 Board Presentation",dept:"Executive",type:"ppt",size:"8.7 MB",sensitivity:"restricted",label:"Highly Confidential"},
-  {name:"IT Security Policy",dept:"IT",type:"pdf",size:"1.6 MB",sensitivity:"internal",label:"Internal Use Only"},
-  {name:"Product Roadmap FY26",dept:"Product",type:"ppt",size:"5.2 MB",sensitivity:"confidential",label:"Confidential - Strategy"},
-  {name:"Open Enrollment Guide",dept:"Human Resources",type:"pdf",size:"2.9 MB",sensitivity:"public",label:"Public"},
-  {name:"Headcount Planning Model",dept:"Finance",type:"excel",size:"1.8 MB",sensitivity:"restricted",label:"Highly Confidential"},
-  {name:"Customer Success Report",dept:"Customer Success",type:"pdf",size:"4.1 MB",sensitivity:"confidential",label:"Confidential - Client Data"},
-  {name:"Brand Guidelines 2025",dept:"Marketing",type:"pdf",size:"12.3 MB",sensitivity:"public",label:"Public"},
-  {name:"Data Retention Schedule",dept:"Legal",type:"word",size:"720 KB",sensitivity:"internal",label:"Internal Use Only"},
+let msalInstance = null;
+let pendingDownload = null;
+
+// ── DOCUMENT LIBRARY ──
+// Files are served as static assets from the same origin.
+// MDCA intercepts the fetch request when session is proxied through .mcas.ms
+const DOCS = [
+  { name:'Q2 Financial Summary',       dept:'Finance',           type:'word',  size:'9.7 KB',  sensitivity:'confidential', label:'Confidential - Finance',       file:'Q2-Financial-Summary.docx' },
+  { name:'Employee Handbook 2025',     dept:'Human Resources',   type:'word',  size:'9.5 KB',  sensitivity:'internal',     label:'Internal Use Only',             file:'Employee-Handbook-2025.docx' },
+  { name:'Revenue Forecast Model',     dept:'Finance',           type:'excel', size:'5.7 KB',  sensitivity:'confidential', label:'Confidential - Finance',       file:'Revenue-Forecast-Model.xlsx' },
+  { name:'Vendor Contract Template',   dept:'Legal',             type:'word',  size:'9.6 KB',  sensitivity:'restricted',   label:'Highly Confidential',           file:'Vendor-Contract-Template.docx' },
+  { name:'IT Security Policy',         dept:'IT',                type:'word',  size:'9.6 KB',  sensitivity:'internal',     label:'Internal Use Only',             file:'IT-Security-Policy.docx' },
+  { name:'Headcount Planning Model',   dept:'Finance',           type:'excel', size:'5.7 KB',  sensitivity:'restricted',   label:'Highly Confidential',           file:'Headcount-Planning-Model.xlsx' },
+  { name:'Customer Success Report',    dept:'Customer Success',  type:'word',  size:'9.7 KB',  sensitivity:'confidential', label:'Confidential - Client Data',   file:'Customer-Success-Report.docx' },
+  { name:'Data Retention Schedule',    dept:'Legal',             type:'word',  size:'9.6 KB',  sensitivity:'internal',     label:'Internal Use Only',             file:'Data-Retention-Schedule.docx' },
 ];
-const TYPE_ICONS={
+
+const TYPE_ICONS = {
   word:'<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',
   excel:'<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 14l-2-3-2 3H7l3-4.5L7 7h2l2 3 2-3h2l-3 4.5 3 4.5h-2zm0-11V3.5L18.5 9H13z"/></svg>',
   pdf:'<svg viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>',
   ppt:'<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 6c0 1.1-.9 2-2 2h-2v2H8V8h4c1.1 0 2 .9 2 2zm6 0h-2V8h2v1zm0 2h-2v-1h2v1z"/></svg>',
 };
-const DL_ICON='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
-function renderDocs(filter='all'){
-  const grid=document.getElementById('doc-grid');
-  const filtered=filter==='all'?DOCS:DOCS.filter(d=>d.type===filter);
-  grid.innerHTML=filtered.map((doc,i)=>`
+
+const DL_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+
+function renderDocs(filter='all') {
+  const grid = document.getElementById('doc-grid');
+  const filtered = filter==='all' ? DOCS : DOCS.filter(d=>d.type===filter);
+  grid.innerHTML = filtered.map((doc,i) => `
     <div class="doc-card">
       <div class="doc-card-top">
         <div class="doc-icon ${doc.type}">${TYPE_ICONS[doc.type]}</div>
@@ -271,61 +287,132 @@ function renderDocs(filter='all'){
       <div class="doc-card-divider"></div>
       <div class="doc-card-footer">
         <span class="doc-size">${doc.size}</span>
-        <button class="btn-download" onclick="handleDownload('${doc.name}','${doc.label}','${doc.sensitivity}')">${DL_ICON} Download</button>
+        <button class="btn-download" id="btn-${i}" onclick="handleDownload('${doc.name}','${doc.label}','${doc.file}',${i})">
+          ${DL_ICON} Download
+        </button>
       </div>
     </div>
   `).join('');
 }
-function filterDocs(type,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderDocs(type);}
-function getMsalConfig(){
-  const tenantId=document.getElementById('tenantId').value.trim();
-  const clientId=document.getElementById('clientId').value.trim();
-  return{auth:{clientId:clientId||'YOUR_CLIENT_ID',authority:`https://login.microsoftonline.com/${tenantId||'YOUR_TENANT_ID'}`,redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:'sessionStorage'}};
+
+function filterDocs(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDocs(type);
 }
-async function signIn(){
-  const tenantId=document.getElementById('tenantId').value.trim();
-  const clientId=document.getElementById('clientId').value.trim();
-  const errBar=document.getElementById('error-bar');
-  errBar.style.display='none';
-  if(!tenantId||!clientId){errBar.textContent='Please enter both Tenant ID and Client ID before signing in.';errBar.style.display='block';return;}
-  showLoading(true);
-  try{
-    msalInstance=new msal.PublicClientApplication(getMsalConfig());
+
+// ── DOWNLOAD FLOW ──
+// When MDCA session policy is active the fetch goes through .mcas.ms proxy
+// MDCA intercepts the response and applies the sensitivity label before delivery
+function handleDownload(fileName, label, file, idx) {
+  const btn = document.getElementById(`btn-${idx}`);
+  if (btn) { btn.classList.add('downloading'); btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" style="animation:spin 0.8s linear infinite"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg> Fetching...`; }
+
+  // Store pending download details for after overlay
+  pendingDownload = { file, fileName };
+
+  showToast('warning', 'MDCA: Intercepting Download', `Session policy matched. Applying label to "${fileName}"...`);
+
+  // Show MDCA overlay after 1.4s
+  setTimeout(() => {
+    document.getElementById('overlay-label-text').textContent = label;
+    document.getElementById('mdca-overlay').style.display = 'flex';
+    // Reset button
+    if (btn) { btn.classList.remove('downloading'); btn.innerHTML = `${DL_ICON} Download`; }
+  }, 1400);
+}
+
+function completeDownload() {
+  document.getElementById('mdca-overlay').style.display = 'none';
+
+  if (pendingDownload) {
+    const { file, fileName } = pendingDownload;
+    pendingDownload = null;
+
+    // Trigger real HTTP GET to the static file - this is what MDCA intercepts
+    const a = document.createElement('a');
+    a.href = file;
+    a.download = file;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    showToast('success', 'Download Complete', 'File delivered with sensitivity label applied. Activity logged to MDCA.');
+  }
+}
+
+function closeOverlay() {
+  document.getElementById('mdca-overlay').style.display = 'none';
+  pendingDownload = null;
+}
+
+// ── AUTH ──
+function getMsalConfig() {
+  const tenantId = document.getElementById('tenantId').value.trim();
+  const clientId = document.getElementById('clientId').value.trim();
+  return {
+    auth: {
+      clientId: clientId || 'YOUR_CLIENT_ID',
+      authority: `https://login.microsoftonline.com/${tenantId || 'YOUR_TENANT_ID'}`,
+      redirectUri: window.location.origin + window.location.pathname,
+    },
+    cache: { cacheLocation: 'sessionStorage' }
+  };
+}
+
+async function signIn() {
+  const tenantId = document.getElementById('tenantId').value.trim();
+  const clientId = document.getElementById('clientId').value.trim();
+  const errBar = document.getElementById('error-bar');
+  errBar.style.display = 'none';
+  if (!tenantId || !clientId) { errBar.textContent = 'Please enter both Tenant ID and Client ID before signing in.'; errBar.style.display = 'block'; return; }
+  document.getElementById('loading-screen').style.display = 'flex';
+  try {
+    msalInstance = new msal.PublicClientApplication(getMsalConfig());
     await msalInstance.initialize();
-    const result=await msalInstance.loginPopup({scopes:['openid','profile','email','User.Read']});
+    const result = await msalInstance.loginPopup({ scopes: ['openid','profile','email','User.Read'] });
     showApp(result.account);
-  }catch(err){showLoading(false);errBar.textContent=`Sign-in failed: ${err.message}`;errBar.style.display='block';}
+  } catch(err) {
+    document.getElementById('loading-screen').style.display = 'none';
+    errBar.textContent = `Sign-in failed: ${err.message}`;
+    errBar.style.display = 'block';
+  }
 }
-function showApp(account){
-  showLoading(false);
-  document.getElementById('login-screen').style.display='none';
-  const app=document.getElementById('app-screen');app.style.display='flex';
-  const name=account.name||account.username;
-  const email=account.username;
-  const initials=name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-  document.getElementById('user-name').textContent=name;
-  document.getElementById('user-email').textContent=email;
-  document.getElementById('user-avatar').textContent=initials;
+
+function showApp(account) {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  const name = account.name || account.username;
+  const initials = name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('user-name').textContent = name;
+  document.getElementById('user-email').textContent = account.username;
+  document.getElementById('user-avatar').textContent = initials;
   renderDocs();
-  setTimeout(()=>showToast('success','Authenticated via Entra ID',`Signed in as ${email}. MDCA session policy is active.`),600);
+  setTimeout(()=>showToast('success','Authenticated via Entra ID',`Signed in as ${account.username}. MDCA session policy is active.`),600);
   setTimeout(()=>showToast('info','MDCA Session Policy Enforced','All downloads from this portal will have sensitivity labels applied before delivery.'),2200);
 }
-function signOut(){if(msalInstance)msalInstance.logoutPopup();document.getElementById('app-screen').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('tenantId').value='';document.getElementById('clientId').value='';}
-function showLoading(show){document.getElementById('loading-screen').style.display=show?'flex':'none';}
-function handleDownload(fileName,label,sensitivity){
-  showToast('warning','MDCA: Intercepting Download',`Session policy matched. Applying label to "${fileName}"...`);
-  setTimeout(()=>{document.getElementById('overlay-label-text').textContent=label;document.getElementById('mdca-overlay').style.display='flex';},1400);
+
+function signOut() {
+  if (msalInstance) msalInstance.logoutPopup();
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
 }
-function closeOverlay(){document.getElementById('mdca-overlay').style.display='none';showToast('success','Download Complete','File delivered with sensitivity label applied. Activity logged to MDCA.');}
-function showToast(type,title,msg){
-  const icons={success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',warning:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>',info:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>'};
-  const colorMap={success:'#1D9E75',warning:'#C9A84C',info:'#4A90E2'};
-  const container=document.getElementById('toast-container');
-  const toast=document.createElement('div');
-  toast.className=`toast ${type}`;
-  toast.innerHTML=`<div class="toast-icon" style="color:${colorMap[type]}">${icons[type]}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
+
+// ── TOAST ──
+function showToast(type, title, msg) {
+  const icons = {
+    success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',
+    warning:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>',
+    info:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+  };
+  const colorMap = {success:'#1D9E75',warning:'#C9A84C',info:'#4A90E2'};
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<div class="toast-icon" style="color:${colorMap[type]}">${icons[type]}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
   container.appendChild(toast);
-  setTimeout(()=>toast.remove(),5000);
+  setTimeout(()=>toast.remove(), 5500);
 }
 </script>
 </body>
