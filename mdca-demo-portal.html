@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Contoso Document Portal</title>
+<script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy:#0F1F3D;--navy-mid:#162844;--navy-light:#1e3560;
+    --teal:#1D9E75;--teal-light:#23bf8d;--teal-dim:rgba(29,158,117,0.12);
+    --gold:#C9A84C;--off-white:#F7F8FA;--text-primary:#0F1F3D;
+    --text-secondary:#4A5568;--text-muted:#8896A8;--border:rgba(15,31,61,0.10);
+    --shadow-sm:0 1px 3px rgba(15,31,61,0.08);--shadow-md:0 4px 16px rgba(15,31,61,0.10);
+    --shadow-lg:0 12px 40px rgba(15,31,61,0.14);--radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--text-primary);min-height:100vh;}
+  #login-screen{min-height:100vh;display:flex;align-items:stretch;}
+  .login-left{flex:1;background:var(--navy);display:flex;flex-direction:column;justify-content:space-between;padding:48px 56px;position:relative;overflow:hidden;}
+  .login-left::before{content:'';position:absolute;top:-80px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(29,158,117,0.18) 0%,transparent 70%);pointer-events:none;}
+  .login-left::after{content:'';position:absolute;bottom:-60px;left:-40px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(29,158,117,0.10) 0%,transparent 70%);pointer-events:none;}
+  .login-brand{display:flex;align-items:center;gap:12px;}
+  .brand-icon{width:40px;height:40px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  .brand-icon svg{width:22px;height:22px;fill:white;}
+  .brand-name{font-family:'DM Serif Display',serif;font-size:1.25rem;color:white;letter-spacing:0.01em;}
+  .login-hero{position:relative;z-index:1;}
+  .login-hero h1{font-family:'DM Serif Display',serif;font-size:2.6rem;color:white;line-height:1.15;margin-bottom:20px;}
+  .login-hero h1 em{font-style:italic;color:var(--teal-light);}
+  .login-hero p{font-size:0.95rem;color:rgba(255,255,255,0.55);line-height:1.65;max-width:340px;}
+  .login-badges{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;}
+  .login-badge{display:flex;align-items:center;gap:10px;font-size:0.78rem;color:rgba(255,255,255,0.45);letter-spacing:0.04em;text-transform:uppercase;}
+  .login-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;}
+  .login-right{width:480px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px 56px;background:white;}
+  .login-card{width:100%;max-width:340px;}
+  .login-card h2{font-family:'DM Serif Display',serif;font-size:1.75rem;color:var(--navy);margin-bottom:6px;}
+  .login-card .subtitle{font-size:0.88rem;color:var(--text-muted);margin-bottom:40px;}
+  .config-section{background:var(--off-white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:28px;}
+  .config-section h3{font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+  .config-field{margin-bottom:12px;}
+  .config-field:last-child{margin-bottom:0;}
+  .config-field label{display:block;font-size:0.75rem;font-weight:500;color:var(--text-secondary);margin-bottom:4px;}
+  .config-field input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--text-primary);background:white;transition:border-color 0.2s;outline:none;}
+  .config-field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,0.10);}
+  .config-field input::placeholder{color:var(--text-muted);font-style:italic;}
+  .btn-sso{width:100%;padding:14px 24px;background:var(--navy);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.2s,transform 0.15s;letter-spacing:0.01em;}
+  .btn-sso:hover{background:var(--navy-light);transform:translateY(-1px);}
+  .ms-logo{width:18px;height:18px;}
+  .login-footer{margin-top:32px;text-align:center;font-size:0.75rem;color:var(--text-muted);line-height:1.6;}
+  .security-badges{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);}
+  .sec-badge{display:flex;align-items:center;gap:5px;font-size:0.7rem;color:var(--text-muted);font-weight:500;}
+  .sec-badge svg{width:12px;height:12px;}
+  #app-screen{display:none;min-height:100vh;flex-direction:column;}
+  header{background:var(--navy);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.18);}
+  .header-brand{display:flex;align-items:center;gap:10px;}
+  .header-brand-icon{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+  .header-brand-icon svg{width:17px;height:17px;fill:white;}
+  .header-brand-name{font-family:'DM Serif Display',serif;font-size:1.05rem;color:white;}
+  .header-center{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);border-radius:8px;padding:6px 14px;font-size:0.78rem;color:rgba(255,255,255,0.6);}
+  .mdca-pill{display:flex;align-items:center;gap:6px;background:rgba(29,158,117,0.18);border:1px solid rgba(29,158,117,0.35);border-radius:20px;padding:3px 10px;font-size:0.70rem;font-weight:600;color:var(--teal-light);letter-spacing:0.04em;text-transform:uppercase;}
+  .mdca-dot{width:5px;height:5px;border-radius:50%;background:var(--teal-light);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+  .header-user{display:flex;align-items:center;gap:10px;}
+  .user-avatar{width:34px;height:34px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;color:white;}
+  .user-info{text-align:right;}
+  .user-name{font-size:0.82rem;font-weight:500;color:white;}
+  .user-email{font-size:0.70rem;color:rgba(255,255,255,0.45);}
+  .btn-signout{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:6px;padding:5px 12px;font-size:0.74rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+  .btn-signout:hover{background:rgba(255,255,255,0.12);color:white;}
+  main{flex:1;padding:40px;max-width:1200px;margin:0 auto;width:100%;}
+  .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;}
+  .page-title h1{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--navy);margin-bottom:4px;}
+  .page-title p{font-size:0.88rem;color:var(--text-muted);}
+  .filter-bar{display:flex;gap:8px;}
+  .filter-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:white;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all 0.15s;}
+  .filter-btn.active,.filter-btn:hover{background:var(--navy);color:white;border-color:var(--navy);}
+  .mdca-banner{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);border-radius:var(--radius-lg);padding:20px 28px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;overflow:hidden;}
+  .mdca-banner::after{content:'';position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(29,158,117,0.15) 0%,transparent 70%);pointer-events:none;}
+  .mdca-banner-text h3{font-size:0.85rem;font-weight:600;color:white;margin-bottom:3px;}
+  .mdca-banner-text p{font-size:0.78rem;color:rgba(255,255,255,0.50);}
+  .mdca-banner-items{display:flex;gap:16px;flex-shrink:0;}
+  .mdca-item{display:flex;align-items:center;gap:6px;font-size:0.75rem;color:rgba(255,255,255,0.55);}
+  .mdca-item-icon{width:24px;height:24px;background:rgba(29,158,117,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+  .mdca-item-icon svg{width:13px;height:13px;fill:var(--teal-light);}
+  .doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
+  .doc-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:box-shadow 0.2s,transform 0.2s;cursor:default;}
+  .doc-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+  .doc-card-top{padding:24px 24px 18px;display:flex;align-items:flex-start;gap:14px;}
+  .doc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .doc-icon svg{width:22px;height:22px;}
+  .doc-icon.word{background:#E8F0FE;}.doc-icon.word svg{fill:#1A73E8;}
+  .doc-icon.excel{background:#E6F4EA;}.doc-icon.excel svg{fill:#1E8E3E;}
+  .doc-icon.pdf{background:#FCE8E6;}.doc-icon.pdf svg{fill:#D93025;}
+  .doc-icon.ppt{background:#FEF3E2;}.doc-icon.ppt svg{fill:#E37400;}
+  .doc-meta{flex:1;min-width:0;}
+  .doc-name{font-size:0.88rem;font-weight:600;color:var(--navy);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .doc-dept{font-size:0.73rem;color:var(--text-muted);margin-bottom:8px;}
+  .sensitivity-tag{display:inline-flex;align-items:center;gap:4px;border-radius:4px;padding:2px 8px;font-size:0.67rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
+  .sensitivity-tag.confidential{background:#FEF3E2;color:#C56000;}
+  .sensitivity-tag.internal{background:#E8F0FE;color:#1557B0;}
+  .sensitivity-tag.public{background:#E6F4EA;color:#137333;}
+  .sensitivity-tag.restricted{background:#FCE8E6;color:#C5221F;}
+  .doc-card-divider{height:1px;background:var(--border);}
+  .doc-card-footer{padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+  .doc-size{font-size:0.73rem;color:var(--text-muted);}
+  .btn-download{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--teal-dim);color:var(--teal);border:1px solid rgba(29,158,117,0.25);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.76rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+  .btn-download:hover{background:var(--teal);color:white;border-color:var(--teal);}
+  .btn-download svg{width:13px;height:13px;}
+  #toast-container{position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+  .toast{background:var(--navy);color:white;border-radius:var(--radius);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;min-width:300px;max-width:400px;box-shadow:var(--shadow-lg);animation:slideIn 0.3s ease-out;pointer-events:all;}
+  .toast.success{border-left:3px solid var(--teal);}
+  .toast.warning{border-left:3px solid var(--gold);}
+  .toast.info{border-left:3px solid #4A90E2;}
+  .toast-icon{width:18px;height:18px;flex-shrink:0;margin-top:1px;}
+  .toast-icon svg{width:18px;height:18px;}
+  .toast-body{flex:1;}
+  .toast-title{font-size:0.82rem;font-weight:600;margin-bottom:2px;}
+  .toast-msg{font-size:0.75rem;color:rgba(255,255,255,0.60);line-height:1.4;}
+  @keyframes slideIn{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+  .mdca-overlay{position:fixed;inset:0;background:rgba(15,31,61,0.55);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;}
+  .mdca-modal{background:white;border-radius:var(--radius-lg);padding:36px 40px;max-width:440px;width:90%;text-align:center;box-shadow:var(--shadow-lg);animation:scaleIn 0.25s ease;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes scaleIn{from{transform:scale(0.95);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .mdca-modal-icon{width:60px;height:60px;background:var(--teal-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+  .mdca-modal-icon svg{width:28px;height:28px;fill:var(--teal);}
+  .mdca-modal h2{font-family:'DM Serif Display',serif;font-size:1.35rem;color:var(--navy);margin-bottom:10px;}
+  .mdca-modal p{font-size:0.83rem;color:var(--text-secondary);line-height:1.6;margin-bottom:20px;}
+  .mdca-label-chip{display:inline-flex;align-items:center;gap:6px;background:var(--teal-dim);border:1px solid rgba(29,158,117,0.3);border-radius:6px;padding:6px 14px;font-size:0.78rem;font-weight:600;color:var(--teal);margin-bottom:24px;}
+  .mdca-steps{text-align:left;background:var(--off-white);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;}
+  .mdca-step{display:flex;align-items:flex-start;gap:10px;font-size:0.78rem;color:var(--text-secondary);margin-bottom:8px;line-height:1.4;}
+  .mdca-step:last-child{margin-bottom:0;}
+  .step-num{width:18px;height:18px;background:var(--teal);border-radius:50%;color:white;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .mdca-modal-btn{width:100%;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:0.86rem;font-weight:500;cursor:pointer;transition:background 0.2s;}
+  .mdca-modal-btn:hover{background:var(--navy-light);}
+  #loading-screen{display:none;position:fixed;inset:0;background:var(--navy);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+  .loader-ring{width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--teal);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loader-text{font-size:0.85rem;color:rgba(255,255,255,0.5);}
+  #error-bar{display:none;background:#FCE8E6;border:1px solid #F5C6C2;border-radius:var(--radius);padding:12px 20px;margin-bottom:20px;font-size:0.82rem;color:#C5221F;}
+</style>
+</head>
+<body>
+<div id="loading-screen"><div class="loader-ring"></div><div class="loader-text">Authenticating with Microsoft Entra ID...</div></div>
+<div id="toast-container"></div>
+<div id="login-screen">
+  <div class="login-left">
+    <div class="login-brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg></div>
+      <span class="brand-name">Contoso Docs</span>
+    </div>
+    <div class="login-hero">
+      <h1>Secure document access, <em>anywhere</em> you work.</h1>
+      <p>This portal is protected by Microsoft Entra ID and monitored by Microsoft Defender for Cloud Apps. All downloads are subject to sensitivity label enforcement in real time.</p>
+    </div>
+    <div class="login-badges">
+      <div class="login-badge"><div class="login-badge-dot"></div>Microsoft Entra ID Protected</div>
+      <div class="login-badge"><div class="login-badge-dot"></div>MDCA Session Policy Active</div>
+      <div class="login-badge"><div class="login-badge-dot"></div>Sensitivity Labels Enforced on Download</div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-card">
+      <h2>Sign in</h2>
+      <p class="subtitle">Use your organizational account to continue</p>
+      <div id="error-bar"></div>
+      <div class="config-section">
+        <h3>Entra App Configuration</h3>
+        <div class="config-field"><label>Tenant ID</label><input type="text" id="tenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/></div>
+        <div class="config-field"><label>Client ID (App Registration)</label><input type="text" id="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/></div>
+      </div>
+      <button class="btn-sso" onclick="signIn()">
+        <svg class="ms-logo" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
+        Sign in with Microsoft
+      </button>
+      <div class="login-footer">Your session will be routed through Microsoft Defender for Cloud Apps. Downloads from this portal will have sensitivity labels applied automatically.</div>
+      <div class="security-badges">
+        <div class="sec-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>MDCA Protected</div>
+        <div class="sec-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>MIP Labels</div>
+        <div class="sec-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>SSO Enforced</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="app-screen">
+  <header>
+    <div class="header-brand">
+      <div class="header-brand-icon"><svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg></div>
+      <span class="header-brand-name">Contoso Docs</span>
+    </div>
+    <div class="header-center"><span>Session proxied via</span><div class="mdca-pill"><div class="mdca-dot"></div>MDCA Active</div></div>
+    <div class="header-user">
+      <div class="user-info"><div class="user-name" id="user-name">Loading...</div><div class="user-email" id="user-email"></div></div>
+      <div class="user-avatar" id="user-avatar">?</div>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
+  <main>
+    <div class="page-header">
+      <div class="page-title"><h1>Document Library</h1><p>All downloads are inspected by MDCA and labeled before delivery to your device.</p></div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterDocs('all',this)">All</button>
+        <button class="filter-btn" onclick="filterDocs('word',this)">Word</button>
+        <button class="filter-btn" onclick="filterDocs('excel',this)">Excel</button>
+        <button class="filter-btn" onclick="filterDocs('pdf',this)">PDF</button>
+        <button class="filter-btn" onclick="filterDocs('ppt',this)">PowerPoint</button>
+      </div>
+    </div>
+    <div class="mdca-banner">
+      <div class="mdca-banner-text"><h3>Microsoft Defender for Cloud Apps - Session Policy Active</h3><p>Downloads from this app are intercepted and protected with Microsoft Purview sensitivity labels before reaching your device.</p></div>
+      <div class="mdca-banner-items">
+        <div class="mdca-item"><div class="mdca-item-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>Control file download</div>
+        <div class="mdca-item"><div class="mdca-item-icon"><svg viewBox="0 0 24 24"><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/></svg></div>Apply sensitivity label</div>
+        <div class="mdca-item"><div class="mdca-item-icon"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>Audit all activity</div>
+      </div>
+    </div>
+    <div class="doc-grid" id="doc-grid"></div>
+  </main>
+</div>
+<div id="mdca-overlay" class="mdca-overlay" style="display:none;" onclick="closeOverlay()">
+  <div class="mdca-modal" onclick="event.stopPropagation()">
+    <div class="mdca-modal-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+    <h2>MDCA: Label Applied</h2>
+    <p>Microsoft Defender for Cloud Apps intercepted your download request. The file has been protected with a Microsoft Purview sensitivity label before delivery.</p>
+    <div class="mdca-label-chip" id="overlay-label-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/></svg><span id="overlay-label-text">Confidential</span></div>
+    <div class="mdca-steps">
+      <div class="mdca-step"><div class="step-num">1</div><div>Session policy matched: <strong>Contoso Docs - Label on Download</strong></div></div>
+      <div class="mdca-step"><div class="step-num">2</div><div>File type inspected and label eligibility confirmed</div></div>
+      <div class="mdca-step"><div class="step-num">3</div><div>Sensitivity label applied via Microsoft Purview Information Protection</div></div>
+      <div class="mdca-step"><div class="step-num">4</div><div>Download delivered. Activity logged to MDCA audit trail.</div></div>
+    </div>
+    <button class="mdca-modal-btn" onclick="closeOverlay()">Continue</button>
+  </div>
+</div>
+<script>
+let msalInstance=null;
+const DOCS=[
+  {name:"Q2 Financial Summary",dept:"Finance",type:"word",size:"1.2 MB",sensitivity:"confidential",label:"Confidential - Finance"},
+  {name:"Employee Handbook 2025",dept:"Human Resources",type:"word",size:"3.4 MB",sensitivity:"internal",label:"Internal Use Only"},
+  {name:"Revenue Forecast Model",dept:"Finance",type:"excel",size:"2.1 MB",sensitivity:"confidential",label:"Confidential - Finance"},
+  {name:"Vendor Contract Template",dept:"Legal",type:"word",size:"890 KB",sensitivity:"restricted",label:"Highly Confidential"},
+  {name:"Q1 Board Presentation",dept:"Executive",type:"ppt",size:"8.7 MB",sensitivity:"restricted",label:"Highly Confidential"},
+  {name:"IT Security Policy",dept:"IT",type:"pdf",size:"1.6 MB",sensitivity:"internal",label:"Internal Use Only"},
+  {name:"Product Roadmap FY26",dept:"Product",type:"ppt",size:"5.2 MB",sensitivity:"confidential",label:"Confidential - Strategy"},
+  {name:"Open Enrollment Guide",dept:"Human Resources",type:"pdf",size:"2.9 MB",sensitivity:"public",label:"Public"},
+  {name:"Headcount Planning Model",dept:"Finance",type:"excel",size:"1.8 MB",sensitivity:"restricted",label:"Highly Confidential"},
+  {name:"Customer Success Report",dept:"Customer Success",type:"pdf",size:"4.1 MB",sensitivity:"confidential",label:"Confidential - Client Data"},
+  {name:"Brand Guidelines 2025",dept:"Marketing",type:"pdf",size:"12.3 MB",sensitivity:"public",label:"Public"},
+  {name:"Data Retention Schedule",dept:"Legal",type:"word",size:"720 KB",sensitivity:"internal",label:"Internal Use Only"},
+];
+const TYPE_ICONS={
+  word:'<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',
+  excel:'<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 14l-2-3-2 3H7l3-4.5L7 7h2l2 3 2-3h2l-3 4.5 3 4.5h-2zm0-11V3.5L18.5 9H13z"/></svg>',
+  pdf:'<svg viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>',
+  ppt:'<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 6c0 1.1-.9 2-2 2h-2v2H8V8h4c1.1 0 2 .9 2 2zm6 0h-2V8h2v1zm0 2h-2v-1h2v1z"/></svg>',
+};
+const DL_ICON='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+function renderDocs(filter='all'){
+  const grid=document.getElementById('doc-grid');
+  const filtered=filter==='all'?DOCS:DOCS.filter(d=>d.type===filter);
+  grid.innerHTML=filtered.map((doc,i)=>`
+    <div class="doc-card">
+      <div class="doc-card-top">
+        <div class="doc-icon ${doc.type}">${TYPE_ICONS[doc.type]}</div>
+        <div class="doc-meta">
+          <div class="doc-name">${doc.name}</div>
+          <div class="doc-dept">${doc.dept}</div>
+          <span class="sensitivity-tag ${doc.sensitivity}">${doc.label}</span>
+        </div>
+      </div>
+      <div class="doc-card-divider"></div>
+      <div class="doc-card-footer">
+        <span class="doc-size">${doc.size}</span>
+        <button class="btn-download" onclick="handleDownload('${doc.name}','${doc.label}','${doc.sensitivity}')">${DL_ICON} Download</button>
+      </div>
+    </div>
+  `).join('');
+}
+function filterDocs(type,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderDocs(type);}
+function getMsalConfig(){
+  const tenantId=document.getElementById('tenantId').value.trim();
+  const clientId=document.getElementById('clientId').value.trim();
+  return{auth:{clientId:clientId||'YOUR_CLIENT_ID',authority:`https://login.microsoftonline.com/${tenantId||'YOUR_TENANT_ID'}`,redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:'sessionStorage'}};
+}
+async function signIn(){
+  const tenantId=document.getElementById('tenantId').value.trim();
+  const clientId=document.getElementById('clientId').value.trim();
+  const errBar=document.getElementById('error-bar');
+  errBar.style.display='none';
+  if(!tenantId||!clientId){errBar.textContent='Please enter both Tenant ID and Client ID before signing in.';errBar.style.display='block';return;}
+  showLoading(true);
+  try{
+    msalInstance=new msal.PublicClientApplication(getMsalConfig());
+    await msalInstance.initialize();
+    const result=await msalInstance.loginPopup({scopes:['openid','profile','email','User.Read']});
+    showApp(result.account);
+  }catch(err){showLoading(false);errBar.textContent=`Sign-in failed: ${err.message}`;errBar.style.display='block';}
+}
+function showApp(account){
+  showLoading(false);
+  document.getElementById('login-screen').style.display='none';
+  const app=document.getElementById('app-screen');app.style.display='flex';
+  const name=account.name||account.username;
+  const email=account.username;
+  const initials=name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('user-name').textContent=name;
+  document.getElementById('user-email').textContent=email;
+  document.getElementById('user-avatar').textContent=initials;
+  renderDocs();
+  setTimeout(()=>showToast('success','Authenticated via Entra ID',`Signed in as ${email}. MDCA session policy is active.`),600);
+  setTimeout(()=>showToast('info','MDCA Session Policy Enforced','All downloads from this portal will have sensitivity labels applied before delivery.'),2200);
+}
+function signOut(){if(msalInstance)msalInstance.logoutPopup();document.getElementById('app-screen').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('tenantId').value='';document.getElementById('clientId').value='';}
+function showLoading(show){document.getElementById('loading-screen').style.display=show?'flex':'none';}
+function handleDownload(fileName,label,sensitivity){
+  showToast('warning','MDCA: Intercepting Download',`Session policy matched. Applying label to "${fileName}"...`);
+  setTimeout(()=>{document.getElementById('overlay-label-text').textContent=label;document.getElementById('mdca-overlay').style.display='flex';},1400);
+}
+function closeOverlay(){document.getElementById('mdca-overlay').style.display='none';showToast('success','Download Complete','File delivered with sensitivity label applied. Activity logged to MDCA.');}
+function showToast(type,title,msg){
+  const icons={success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',warning:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>',info:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>'};
+  const colorMap={success:'#1D9E75',warning:'#C9A84C',info:'#4A90E2'};
+  const container=document.getElementById('toast-container');
+  const toast=document.createElement('div');
+  toast.className=`toast ${type}`;
+  toast.innerHTML=`<div class="toast-icon" style="color:${colorMap[type]}">${icons[type]}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
+  container.appendChild(toast);
+  setTimeout(()=>toast.remove(),5000);
+}
+</script>
+</body>
+</html>
